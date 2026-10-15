@@ -4,16 +4,7 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
-  null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#7986cb', // J - indigo
-  '#ffb74d', // L - orange
-];
+// Colores: ver SKINS[*].palette en skins.js
 
 const PIECES = [
   null,
@@ -39,7 +30,12 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const nameEntry = document.getElementById('name-entry');
+const nameInput = document.getElementById('name-input');
+const overlayRecords = document.getElementById('overlay-records');
 
+let startLevel = 1; // nivel inicial para la próxima partida (menú de pausa)
+let comboCount = 0, runBestCombo = 0, pendingRecord = false;
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
 function createBoard() {
@@ -103,13 +99,19 @@ function clearLines() {
       r++;
     }
   }
+  comboCount = cleared ? comboCount + 1 : 0;
+  if (comboCount > runBestCombo) runBestCombo = comboCount;
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
-    dropInterval = Math.max(100, 1000 - (level - 1) * 90);
+    level = Math.max(startLevel, Math.floor(lines / 10) + 1);
+    dropInterval = intervalForLevel(level);
     updateHUD();
   }
+}
+
+function intervalForLevel(lvl) {
+  return Math.max(100, 1000 - (lvl - 1) * 90);
 }
 
 function ghostY() {
@@ -158,18 +160,28 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  context.save();
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  activeSkin.draw(context, x * size, y * size, size, activeSkin.palette[colorIndex]);
+  context.restore();
+}
+
+function redrawAll() {
+  if (!board || !current || !next) return;
+  drawNext();
+  draw();
+}
+
+function clearWithSkin(context, cv) {
+  context.clearRect(0, 0, cv.width, cv.height);
+  if (activeSkin.bg) {
+    context.fillStyle = activeSkin.bg;
+    context.fillRect(0, 0, cv.width, cv.height);
+  }
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = activeSkin.grid;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -186,7 +198,7 @@ function drawGrid() {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  clearWithSkin(ctx, canvas);
   drawGrid();
 
   // board
@@ -209,7 +221,7 @@ function draw() {
 
 function drawNext() {
   const NB = 30;
-  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  clearWithSkin(nextCtx, nextCanvas);
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
@@ -220,16 +232,37 @@ function drawNext() {
 
 function endGame() {
   gameOver = true;
+  overlay.classList.remove('is-paused');
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
+  Records.updateStats(runBestCombo, lines);
+  pendingRecord = Records.qualifies(score);
+  nameEntry.classList.toggle('hidden', !pendingRecord);
+  refreshRecords(-1);
+  if (pendingRecord) { nameInput.value = ''; nameInput.focus(); }
+}
+
+function refreshRecords(highlight) {
+  Records.render(document.getElementById('records-panel'), highlight);
+  Records.render(overlayRecords, highlight);
+}
+
+function saveRecordName() {
+  if (!pendingRecord) return;
+  pendingRecord = false;
+  const idx = Records.add(nameInput.value, score, lines);
+  nameEntry.classList.add('hidden');
+  refreshRecords(idx);
 }
 
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
+  overlay.classList.toggle('is-paused', paused);
   if (!paused) {
+    overlay.classList.add('hidden');
     lastTime = performance.now();
     loop(lastTime);
   } else {
@@ -260,22 +293,29 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
+  comboCount = 0;
+  runBestCombo = 0;
+  pendingRecord = false;
+  nameEntry.classList.add('hidden');
+  overlayRecords.textContent = '';
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = intervalForLevel(level);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  overlay.classList.remove('is-paused');
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -299,6 +339,21 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', () => {
+  saveRecordName(); // guarda como ANON si quedó pendiente
+  restartBtn.blur();
+  init();
+});
+nameEntry.addEventListener('submit', e => { e.preventDefault(); saveRecordName(); });
+document.getElementById('reset-records-btn').addEventListener('click', e => {
+  if (window.confirm('¿Borrar todos los records?')) {
+    Records.reset();
+    refreshRecords(-1);
+  }
+  e.currentTarget.blur();
+});
+refreshRecords(-1);
 
+initSkinSelect();
+setSkin(loadSkinName(), false);
 init();
