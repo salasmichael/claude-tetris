@@ -79,6 +79,41 @@ body {
   border-radius: 4px;
 }
 
+/* ---- Selector de skin ---- */
+#skin-select {
+  background: #22223a;
+  color: #ccc;
+  border: 1px solid #3a3a5a;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+/* ---- Skins (pagina/panel) ---- */
+body, #board, #next-canvas, .value, .game-title { transition: background-color 0.2s, color 0.2s; }
+
+body[data-skin="neon"] { background: #000; }
+body[data-skin="neon"] .game-title,
+body[data-skin="neon"] .value { color: #0ff; text-shadow: 0 0 8px #0ff; }
+body[data-skin="neon"] #board,
+body[data-skin="neon"] #next-canvas { background: #000; border-color: #0ff; box-shadow: 0 0 16px rgba(0, 255, 255, 0.5); }
+
+body[data-skin="pastel"] { background: #f3e9f7; color: #5a4a6a; }
+body[data-skin="pastel"] .game-title,
+body[data-skin="pastel"] .value { color: #9a7bbf; }
+body[data-skin="pastel"] .label { color: #a597b5; }
+body[data-skin="pastel"] .controls li { color: #7a6a8a; }
+body[data-skin="pastel"] #board,
+body[data-skin="pastel"] #next-canvas { background: #fdf6f0; border-color: #d9c7e6; box-shadow: 0 0 20px rgba(150, 120, 190, 0.25); }
+body[data-skin="pastel"] #skin-select,
+body[data-skin="pastel"] kbd { background: #fff; color: #5a4a6a; border-color: #d9c7e6; }
+
+body[data-skin="pixel"] { background: #08080d; font-family: 'Courier New', Courier, monospace; }
+body[data-skin="pixel"] .game-title,
+body[data-skin="pixel"] .value { color: #f2c230; }
+body[data-skin="pixel"] #board,
+body[data-skin="pixel"] #next-canvas { background: #101018; border-radius: 0; border: 2px solid #4b5bbd; image-rendering: pixelated; }
+
 /* ---- Controles ---- */
 .controls ul {
   list-style: none;

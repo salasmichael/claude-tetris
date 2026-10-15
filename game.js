@@ -4,16 +4,7 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
-  null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#7986cb', // J - indigo
-  '#ffb74d', // L - orange
-];
+// Colores: ver SKINS[*].palette en skins.js
 
 const PIECES = [
   null,
@@ -169,18 +160,28 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  context.save();
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  activeSkin.draw(context, x * size, y * size, size, activeSkin.palette[colorIndex]);
+  context.restore();
+}
+
+function redrawAll() {
+  if (!board || !current || !next) return;
+  drawNext();
+  draw();
+}
+
+function clearWithSkin(context, cv) {
+  context.clearRect(0, 0, cv.width, cv.height);
+  if (activeSkin.bg) {
+    context.fillStyle = activeSkin.bg;
+    context.fillRect(0, 0, cv.width, cv.height);
+  }
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = activeSkin.grid;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -197,7 +198,7 @@ function drawGrid() {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  clearWithSkin(ctx, canvas);
   drawGrid();
 
   // board
@@ -220,7 +221,7 @@ function draw() {
 
 function drawNext() {
   const NB = 30;
-  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  clearWithSkin(nextCtx, nextCanvas);
   const shape = next.shape;
   const offX = Math.floor((4 - shape[0].length) / 2);
   const offY = Math.floor((4 - shape.length) / 2);
@@ -353,4 +354,6 @@ document.getElementById('reset-records-btn').addEventListener('click', e => {
 });
 refreshRecords(-1);
 
+initSkinSelect();
+setSkin(loadSkinName(), false);
 init();
