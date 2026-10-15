@@ -248,7 +248,6 @@ function saveRecordName() {
   const idx = Records.add(nameInput.value, score, lines);
   nameEntry.classList.add('hidden');
   refreshRecords(idx);
-  restartBtn.focus();
 }
 
 function togglePause() {
@@ -330,7 +329,11 @@ document.addEventListener('keydown', e => {
   updateHUD();
 });
 
-restartBtn.addEventListener('click', init);
+restartBtn.addEventListener('click', () => {
+  saveRecordName(); // guarda como ANON si quedó pendiente
+  restartBtn.blur();
+  init();
+});
 nameEntry.addEventListener('submit', e => { e.preventDefault(); saveRecordName(); });
 document.getElementById('reset-records-btn').addEventListener('click', e => {
   if (window.confirm('¿Borrar todos los records?')) {
