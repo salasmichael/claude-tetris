@@ -171,3 +171,70 @@ kbd {
 .pm-controls-list li { display: flex; align-items: center; gap: 4px; }
 .pm-level { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: #aaa; }
 .pm-level select { background: #22223a; color: #e0e0e0; border: 1px solid #3a3a5a; border-radius: 4px; padding: 4px 6px; }
+
+/* ---- Records ---- */
+.records-list {
+  list-style: decimal inside;
+  font-size: 12px;
+  color: #aaa;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.records-list li {
+  display: list-item;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.rec-score { float: right; font-family: 'Courier New', Courier, monospace; color: #7aa2f7; }
+.rec-name { margin-left: 4px; }
+.records-empty { list-style: none; color: #555570; }
+.records-list li.records-new { background: #7aa2f7; color: #0f0f17; font-weight: 700; }
+.records-list li.records-new .rec-score { color: #0f0f17; }
+.records-stats { margin-top: 6px; font-size: 11px; color: #888; }
+
+#reset-records-btn {
+  background: transparent;
+  border: 1px solid #3a3a5a;
+  color: #888;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#reset-records-btn:hover { color: #e57373; border-color: #e57373; }
+
+.name-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.name-entry.hidden { display: none; }
+
+#name-input {
+  background: #1a1a25;
+  border: 1px solid #7aa2f7;
+  color: #e0e0e0;
+  border-radius: 4px;
+  padding: 6px 8px;
+  text-align: center;
+  user-select: text;
+}
+
+#save-name-btn {
+  background: #7aa2f7;
+  color: #0f0f17;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.overlay-records { min-width: 180px; }
